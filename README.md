@@ -5,6 +5,4 @@ The TPLDA algorithm is described in the paper "Classification tree algorithms fo
 
 - File *application_microarray* contains codes and data used in the application introduced in the paper "Classification tree algorithms for grouped variables" written by A. Poterie, J.-F.Dupuy, V. Monbet, L. Rouvière.
 
-- Click on the badge to launch rstudio live on binder:
-
-[![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/apoterie/TPLDA/master?urlpath=rstudio)
+- Click on the badge to launch rstudio live on binder: [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/apoterie/TPLDA/master?urlpath=rstudio)
