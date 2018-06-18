@@ -1,6 +1,10 @@
 
-Codes used in the paper "Classification tree algorithms for grouped variables" written by A. Poterie, J.-F.Dupuy, V. Monbet, [L. Rouvière](https://github.com/lrouviere).
+The TPLDA algorithm is described in the paper "Classification tree algorithms for grouped variables" written by A. Poterie, J.-F.Dupuy, V. Monbet, [L. Rouvière](https://github.com/lrouviere).
 
-Click on the badge to lauch rstudio live on binder:
+- File *Fonctions_TPLDA.R* contains the fonctions to built a TPLDA tree.
+
+- File *application_microarray* contains codes and data used in the application introduced in the paper "Classification tree algorithms for grouped variables" written by A. Poterie, J.-F.Dupuy, V. Monbet, L. Rouvière.
+
+- Click on the badge to launch rstudio live on binder:
 
 [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/apoterie/TPLDA/master?urlpath=rstudio)
