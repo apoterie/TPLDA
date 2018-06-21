@@ -1,5 +1,5 @@
 
-The TPLDA algorithm is described in the paper "Classification tree algorithm for grouped variables" written by A. Poterie, J.-F. Dupuy, V. Monbet, [L. Rouvière](https://github.com/lrouviere).
+The TPLDA algorithm is described in the paper ["Classification tree algorithm for grouped variables"](https://hal.archives-ouvertes.fr/hal-01623570) written by A. Poterie, J.-F. Dupuy, V. Monbet, [L. Rouvière](https://github.com/lrouviere).
 
 - File *Fonctions_TPLDA.R* contains the fonctions to built a TPLDA tree.
 
