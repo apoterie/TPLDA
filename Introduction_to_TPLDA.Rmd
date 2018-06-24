@@ -4,7 +4,7 @@ output: html_document
 ---
 ## A simple example using the iris dataset
 
-**1 The datatset:**
+**1. The datatset:**
 
 We will use the **iris** dataset, which gives measurements in centimeters of the following four variables: sepal length, sepal width, petal length, width length.
  
@@ -75,8 +75,9 @@ source("Fonctions_TPLDA.R")
 maximal_tree <-Tree_PLDA(train,group=group,grp.importance=TRUE)
 print(maximal_tree$tree)
 ``` 
-tree_seq_PLDA<-function(treeTPLDA)
-**Selection of the final TPLDA tree:**
+
+
+**6.Selection of the final TPLDA tree:**
 
 We first build the sequence of subtree with the function *tree_seq_PLDA*.
 
@@ -95,7 +96,7 @@ Final_tree<- tree_seq[[which.min(error_validation)]]
 print(Final_tree)
 ``` 
 
-**Group importance:**
+**5. Group importance:**
 
 ```{r include=TRUE}
   importance<-rep(0,length(unique(group[!is.na(group)])))
