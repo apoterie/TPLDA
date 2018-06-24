@@ -18,7 +18,7 @@ table(iris$Species)
 
 **2. Data formatting:**
 
-The TPLDA functions in *Functions_TPLDA.R* only deal with binary classification problem (for this moment). 
+The TPLDA functions in *Fonctions_TPLDA.R* only deal with binary classification problem (for this moment). 
 So we consider only the following two species: setosa and virgina. Moreover, the 50 versicolor samples are equally include in the setosa and the virginica group (in order to make the problem harder).
 
 The data have to have the following format:
