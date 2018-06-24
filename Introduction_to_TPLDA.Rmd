@@ -1,0 +1,113 @@
+---
+title: "Introduction to TPLDA"
+output: html_document
+---
+## A simple example using the iris dataset
+
+**1 The datatset:**
+
+We will use the **iris** dataset, which gives measurements in centimeters of the following four variables: sepal length, sepal width, petal length, width length.
+ 
+The response variable is the species of iris. Three species are consider:setosa, versicolor and virginica. The dataset contains 50 iris samples of each species.
+
+```{r setup, include=TRUE}
+data(iris)
+names(iris)
+table(iris$Species)
+```
+
+**2. Data formatting:**
+
+The TPLDA functions in *Functions_TPLDA.R* only deal with binary classification problem (for this moment). 
+So we consider only the following two species: setosa and virgina. Moreover, the 50 versicolor samples are equally include in the setosa and the virginica group (in order to make the problem harder).
+
+The data have to have the following format:
+
+```{r,include=TRUE}
+#data<-iris[which(iris$Species=="setosa" | iris$Species=="versicolor"),c(5,1:4)]
+data<-iris[,c(5,1:4)]
+names(data)
+names(data)[1]<-"Y"
+#data$Y<-as.factor(ifelse(data$Y=="setosa",1,0))
+data$Y<-c(rep(1,75),rep(0,75))
+```
+
+We consider two groups of inputs : 
+
+ - Group 1: sepal length and sepal width
+ - Group 2: petal length and petal width.
+
+```{r,include=TRUE}
+group<-c(NA,1,1,2,2)
+names(data)[-1]<-paste(names(data)[-1],"_G",group[-1],sep="")
+names(data)
+```
+
+The dataset is divided into a training sample (2/3 of the data) and a validation sample (1/3 of the data).
+
+
+```{r,include=TRUE}
+ind0 <- which(data$Y == "0")
+ind1 <- which(data$Y == "1")
+ind0_val<-sample(ind0, floor(length(ind0) * 1/3), F)
+ind1_val<-sample(ind1, floor(length(ind1) * 1/3), F)
+validation<-data[c(ind0_val,ind1_val),]
+train<-data[setdiff(c(ind0,ind1),c(ind0_val,ind1_val)),]
+table(validation$Y);dim(validation)
+table(train$Y);dim(train)
+```  
+
+**3. Building a maximal TPLDA tree:**
+
+We use the default values for the parameters i.e.:
+
+- crit= 1 (the used impurity function is the Gini index)
+- case_min = 3 (the minimum number of observations that must exist in a node in order for a split to be attempted)
+- kfold = 3 (the minimum number of observations that must exist in a node in order for a split to be attempted)
+- penalty="No" (no penalty function is used in the splitting criterion.)
+
+Since we want to assess the importance of the group, we set:
+
+- group.importance= TRUE.
+
+```{r include=TRUE}
+source("Fonctions_TPLDA.R")
+maximal_tree <-Tree_PLDA(train,group=group,grp.importance=TRUE)
+print(maximal_tree$tree)
+``` 
+tree_seq_PLDA<-function(treeTPLDA)
+**Selection of the final TPLDA tree:**
+
+We first build the sequence of subtree with the function *tree_seq_PLDA*.
+
+
+```{r include=TRUE}
+tree_seq<-tree_seq_PLDA(maximal_tree$tree)
+#print(tree_seq)
+``` 
+
+Next, we select the subtree in the sequence that minimizes the classifiction error rate on the validation sample.
+
+```{r include=TRUE}
+error_validation<- impurete_plda(validation, tree_seq=tree_seq,treePLDA=maximal_tree)$impurete$Misclass
+print(error_validation)
+Final_tree<- tree_seq[[which.min(error_validation)]]
+print(Final_tree)
+``` 
+
+**Group importance:**
+
+```{r include=TRUE}
+  importance<-rep(0,length(unique(group[!is.na(group)])))
+for(j in unique(as.numeric(as.character(Final_tree$parent[!is.na(Final_tree$parent)])))){
+      importance<-importance+as.numeric(as.character(maximal_tree$importance[[j]]))
+    }
+    importance<-importance*(100/max(importance))
+    print(importance)
+``` 
+
+```{r include=TRUE}
+importance<-group_importance(Final_tree,maximal_tree,group)
+barplot(importance$importance_cor,names=c("Grp 1","Grp 2"))
+``` 
+  

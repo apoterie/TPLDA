@@ -111,12 +111,12 @@ Tree_PLDA <-function(data,group,crit = 1,case_min = 3,kfold = 3,penalty="No",grp
           nums[[i]] <- unlist(splits[[i]]$indices[[ind_var]])
           n_zero[i] <-group_size[ind_var]-unlist(splits[[i]]$n_effec)[ind_var]
           taille_groupe[i]<-group_size[ind_var]
-          lambda[i]<-ifelse(cv==TRUE,unlist(lambdas[[i]])[ind_var],0)
+          lambda[i]<-unlist(lambdas[[i]])[ind_var]
         }else{
           action[i] <- -3 
           n_zero[i] <-group_size[ind_var]-unlist(splits[[i]]$n_effec)[ind_var]
           taille_groupe[i]<-group_size[ind_var]
-          lambda[i]<-ifelse(cv==TRUE,unlist(lambdas[[i]])[ind_var],0)
+          lambda[i]<-unlist(lambdas[[i]])[ind_var]
         }
       }else{
         action[i] <- -2 
@@ -434,8 +434,8 @@ predFonctionPLDA<-function(x, new,ldas, nums,tree){
 # ==> built a sequence of subtrees with respect to a TPLDA tree and the depth notion
 #************************************************************************************** 
 
-tree_seq_PLDA<-function(treeTPLDA){
-  d_max<-max(as.numeric(as.character(unlist(treeTPLDA$depth))))
+tree_seq_PLDA<-function(treePLDA){
+  d_max<-max(as.numeric(as.character(unlist(treePLDA$depth))))
   TPLDA_seq<-list()
   for (i in 0:d_max) {
     tree <- as.data.frame(treePLDA[which(as.numeric(as.character(treePLDA$depth)) <= i), ])
@@ -501,4 +501,36 @@ impurete_plda <- function(validation, tree_seq,treePLDA) {
 ###                      "nom_noeuds" (=node name), "N" (node size), "N[Y=1]" (number of observations in the node with the label "Y=1"), 
 ###                      P[Y=1] (probability that an observation into the node belongs to the class "Y=1"), P[Y=0] (probability that an 
 ###                      observation into the node belongs to the class "Y=0"), P[hat.Y!=Y] (node misclassifcation rate)
+
+
+#**************************************************************************************  
+# group_importance() 
+# ==> compute the score of importance of each group of inputs.
+#************************************************************************************** 
+
+group_importance<-function(final_tree,maximal_tree,group){
+  importance<-rep(0,length(unique(group[!is.na(group)])))
+  importance_cor<-rep(0,length(unique(group[!is.na(group)])))
+  if(max(as.numeric(as.character(final_tree$depth)))>0){
+    for(j in unique(as.numeric(as.character(final_tree$parent[!is.na(final_tree$parent)])))){
+      importance<-importance+as.numeric(as.character(maximal_tree$importance[[j]]))
+      importance_cor<-importance_cor+as.numeric(as.character(maximal_tree$cimportance[[j]]))
+    }
+    importance<-importance*(100/max(importance))
+    importance_cor<-importance_cor*(100/max(importance_cor))
+  }
+  else{
+    print("The final tree is trivial so no score of importance can be computed for the groups.")
+    }
+  return(list(importance=importance,importance_cor=importance_cor))
+}
+
+# INPUT PARAMETERS
+###     final tree : the final tree (a data frame as the object tree return by the function Tree_PLDA())
+###     maximal_tree :  the output object of the fucntion Tree_PLDA(). It is a maximal TPLDA tree. 
+###     group: a vector of size p indicating the group of each variable. The first component of the vector is NA, it is for the output variable Y.
+
+# OUTPUT VALUES, a list including
+###    importance : a vector giving the (uncorrected) score of importance for each group
+###    importance_cor : a vector giving the corrected score of importance for each group
 
