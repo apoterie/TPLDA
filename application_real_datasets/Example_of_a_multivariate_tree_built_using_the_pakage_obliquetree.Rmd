@@ -1,0 +1,108 @@
+---
+title: "Example of a multivariate tree built with the package oblique.tree"
+output: html_document
+---
+## A simple example using the iris dataset
+
+**1. The datatset:**
+
+We will use the **leukemia** dataset (Golub et al., 1999), which contains the expression levels of 2135 genes from 72 samples. Among these 72 samples, 47 samples are classified as acute lymphobastic leukemias (ALL) and the remaining 25 samples are considered as acute myeloid leukemias (AML). 
+ 
+
+```{r setup, include=TRUE}
+path<-"~/Google Drive/These/Classification_tree_for_grouped_variables/Applications_soumission_Computational_Statistics/Leukemia/"# path to datasets
+load(paste(path,"Leukemia_data_fusion.RData",sep=""))
+for(i in 2:ncol(leuk)){leuk[,i]<-as.numeric(as.character(leuk[,i]))}
+```
+
+**2. Data preprocessing:**
+
+Following Dudoit et al. (2002) and Sewak et al. (2009), the following steps are applied on the dataset, by using the version 1.1.453 of **RStudio**:
+  
+  1) Thresholding between 20 and 16000,
+```{r,include=TRUE}
+data<-leuk
+for(l in 2:ncol(data)){data[,l]<-ifelse(data[,l]<20,20,ifelse( data[,l]>16000,16000, data[,l]))}
+```
+
+  2) Deleting genes with the lowest variation across the sample
+```{r,include=TRUE}
+CV<-apply(data[,2:ncol(data)],2,var)
+indices<-which(CV>0)+1
+data_post<-data[,c(1,indices)]
+for(l in 2:ncol(data_post)){data_post[,l]<-as.numeric(as.character(data_post[,l]))}
+names(data_post)[2:ncol(data_post)]<-paste("Gene_",2:ncol(data_post),sep="")
+```
+
+
+Next, the dataset is divided into a training/validation/test samples according to the proportions (0.8,0.1,0.1). 
+
+
+```{r,include=TRUE}
+ind0 <- which(data_post$Y == "0")
+ind1 <- which(data_post$Y == "1")
+w0 <- ind0
+w1 <- ind1
+set.seed(33)
+w0v <- sample(w0, floor(length(ind0) * 0.1), F)
+set.seed(34)
+w1v <- sample(w1, floor(length(ind1) * 0.1), F)
+validation<-data_post[c(w1v, w0v),]
+w0 <- setdiff(w0, w0v)
+w1 <- setdiff(w1, w1v)
+set.seed(35)
+w0t <- sample(w0, floor(length(ind0)* 0.1), F)
+set.seed(36)
+w1t <- sample(w1, floor(length(ind1)* 0.1), F)
+test<-data_post[c(w1t, w0t),]
+w0 <- setdiff(w0, w0t)
+w1 <- setdiff(w1, w1t)
+```  
+
+
+In the resulted training sample, classes are balanced by using the method callad SMOTE (Chawla et al., 2002) which is available in the **R** package **UBL**.
+
+```{r,include=TRUE}
+library(UBL)
+temp<-SmoteClassif(Y~., data_post[c(w0,w1),],"balance")
+temp2<- TomekClassif(Y~., temp,Cl=c("0","1"))[[1]]
+train<-temp2
+names(train)<-names(data_post)
+```  
+
+
+
+
+**3. Building a multivariate tree:**
+
+We use the **R** package named **Oblique.tree** which available only for the version 0.99.489 (or the formers) of **RStudio**.
+
+ 1) Build a fully-grow tree
+```{r include=TRUE}
+library(oblique.tree)
+ob.tree <- oblique.tree(formula= Y~.,data=train, oblique.splits="only", variable.selection="lasso.aic")
+plot(ob.tree);text(ob.tree)
+print(ob.tree$details[[1]]$coefficients)
+``` 
+ 
+ 2) Prune the maximal tree
+```{r include=TRUE}
+seq_tree<-prune.oblique.tree(ob.tree, newdata=train,prune.impurity="misclass", penalty="size",  eps=1e-3)
+subtree<-list();Ypred<-list();error_rate<-c()
+for(i in 1:length(seq_tree$size)){
+  subtree[[i]]<-prune.oblique.tree(ob.tree,k=seq_tree$k[i],newdata=validation,prune.impurity="misclass",    
+                                   penalty="size",  eps=1e-3)
+  Ypred[[i]]<-predict(subtree[[i]],type="class",newdata=validation)
+  error_rate[i]<-length(which(Ypred[[i]]!=validation$Y))/length(validation$Y)
+}
+prune_tree<-prune.oblique.tree(ob.tree,k=seq_tree$k[which.min(error_rate)],newdata=validation,prune.impurity = "misclass", penalty = "size",  eps = 1e-3)
+``` 
+
+ 3) Plot the final tree and its predictive performance
+```{r include=TRUE}
+plot(prune_tree);text(prune_tree)
+Yhat<-predict(prune_tree,type="class",newdata=test)
+error_rate<-length(which(Yhat!=test$Y))/length(test$Y);
+print(error_rate);print(table("Predicted"=Yhat,"True"=test$Y))
+``` 
+
